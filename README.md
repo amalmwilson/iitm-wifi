@@ -1,2 +1,2 @@
 # iitm-wifi
-WiFi simulation in Java
+This repository contains the eclipse project folder for WiFi simulation in Java.
