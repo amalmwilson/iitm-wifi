@@ -18,7 +18,8 @@ public class Simulator {
 		apList = services.createAP();
 		services.printAPLocations(apList);
 		
-		ueList = services.createUsers();
+		ueList = services.createUsers(apList);
+		services.printUELocations(ueList);
 	}
 
 }
