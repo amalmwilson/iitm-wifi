@@ -28,7 +28,7 @@ public class Location {
 	
 	/* Some useful methods */
 	public double distanceTo(Location loc) {
-		return (Math.sqrt(Math.pow(this.x - loc.getX(), 2) + Math.pow((this.y - loc.getY() ), 2)));
+		return (Math.abs(Math.sqrt(Math.pow(this.x - loc.getX(), 2) + Math.pow((this.y - loc.getY() ), 2))));
 	}
 
 	@Override
