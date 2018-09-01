@@ -14,7 +14,8 @@ public class Params {
 	public static String AP_DISRIBUTION = "Uniform";
 	
 	public static int TX_POWER = 100; 			// milliWatt or 10*log(P/1mW)dBm
-	public static int NOISE = -90; 				// dBm
+	public static int NOISE = 90; 				// dBm
+	public static int CH_FREQUENCY = 2400;		// MHz
 	public static int CH_BANDWIDTH = 20;		// Mega Hertz
 	public static int AP_RANGE = 50;			// radius in meters
 	

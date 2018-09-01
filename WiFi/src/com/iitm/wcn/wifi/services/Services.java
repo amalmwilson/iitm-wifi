@@ -19,6 +19,7 @@ public class Services {
 		Random randY = new Random(Params.AP_SEED + 1);
 		Random randTime = new Random(Params.TIME_SEED + 1);
 		Random randDur = new Random(Params.TIME_SEED + 2);
+		Random seed = new Random(Params.TIME_SEED + 3);
 		long txStartTime;
 		int txDuration;
 		
@@ -29,7 +30,8 @@ public class Services {
 			/* generate a random duration for data transfer */
 			txDuration = Math.min((int)(Params.SIM_DURATION - txStartTime), (int)(randTime.nextDouble() * Params.MAX_TX_DURATON / Params.SIFS) * Params.SIFS);
 			loc = new Location( randX.nextInt(Params.AREA),	randY.nextInt(Params.AREA));
-			ap = new AccessPoint(i, loc,txStartTime, txDuration);
+			
+			ap = new AccessPoint(i, loc,txStartTime, txDuration, seed.nextLong());
 			apList.add(ap);
 		}
 		return apList;
@@ -45,8 +47,8 @@ public class Services {
 		double theta;
 		int r;
 			
-		for( int i = 0; i < Params.NUM_APS; ++i) {
-			apLoc = apList.get(i).getLoc();
+		for( AccessPoint ap: apList ) {
+			apLoc = ap.getLoc();
 			
 			for( int j = 0; j < Params.USERS_PER_AP; ++j) {
 				theta = (randTheta.nextInt(360)) * Math.PI / 180;
@@ -60,7 +62,7 @@ public class Services {
 					continue;
 				}
 				
-				ue = new UserEquipment(j, loc);
+				ue = new UserEquipment(ap.getId() * 100 + j, loc);
 				
 				
 				ueList.add(ue);
@@ -106,7 +108,7 @@ public class Services {
 		for( UserEquipment ue: ueList ) {
 			ap = ue.searchAP(apList);
 			ue.associateAP(ap);
-			//ap.associateUE(ue);
+			ap.associateUE(ue);
 		}
 		
 	}
@@ -115,6 +117,12 @@ public class Services {
 	public void printAPSchedule(List<AccessPoint> apList) {
 		for(AccessPoint ap: apList ) {
 			System.out.println(ap.getId() + ":" + ap.getTxStartTime() + " for " + ap.getTxDuration());
+		}
+	}
+	
+	public void printUEAssociations(List<AccessPoint> apList) {
+		for(AccessPoint ap: apList ) {
+			ap.printAssoicatedUEs();
 		}
 	}
 }

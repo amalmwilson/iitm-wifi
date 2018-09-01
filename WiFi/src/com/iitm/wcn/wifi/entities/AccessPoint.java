@@ -18,8 +18,9 @@ public class AccessPoint {
 	private int txPower;		// in mW
 	private long txStartTime;	// in 10 microsecond slots
 	private int backoffTime;
+	private boolean backoffStatus;
 	private int txDuration;
-	private boolean difsCheckOn;
+	private boolean difsWaited;
 	
 	public int getId() {
 		return id;
@@ -52,7 +53,6 @@ public class AccessPoint {
 
 	public void setTxStartTime(long time) {
 		this.txStartTime = time;
-		this.difsCheckOn = false;
 	}
 
 	public void associateUE(UserEquipment ue) {
@@ -72,7 +72,7 @@ public class AccessPoint {
 	}
 
 	
-	public AccessPoint(int id, Location loc, long txStartTime, int txDuration) {
+	public AccessPoint(int id, Location loc, long txStartTime, int txDuration, long seed) {
 		associatedUEList = new ArrayList<UserEquipment>();
 		neighbours = new ArrayList<AccessPoint>();
 		this.loc = loc;
@@ -81,8 +81,11 @@ public class AccessPoint {
 		this.txStartTime = txStartTime;
 		this.txDuration = txDuration;
 		this.backoffTime = Params.T_SLOT;
-		this.difsCheckOn = false;
+		this.difsWaited= false;
 		this.ch = new Channel();
+		this.backoffStatus = false;
+		this.randTime = new Random(seed + 1);
+		this.randDur = new Random(seed + 2);
 	}
 
 	/* add an accesspoint to the neighbours list */
@@ -158,14 +161,29 @@ public class AccessPoint {
 		this.txStartTime = time + (long)(randTime.nextDouble() * (Params.SIM_DURATION - time) / Params.SIFS) * Params.SIFS;
 		this.txDuration = Math.min((int)(Params.SIM_DURATION - txStartTime), (int)(randTime.nextDouble() * Params.MAX_TX_DURATON / Params.SIFS) * Params.SIFS);
 		this.backoffTime = Params.T_SLOT;
-		this.difsCheckOn = false;
+		this.difsWaited = false;
 	}
 
 	public boolean waitedDIFS() {
-		return difsCheckOn;
+		return difsWaited;
 	}
 
 	public void waitForDIFS() {
-		this.difsCheckOn = true;
+		this.difsWaited = true;
+	}
+
+	public boolean isInBackoffMode() {
+		return backoffStatus;
+	}
+
+	public void putInBackoffMode() {
+		this.backoffStatus = true;
+	}
+	
+	public void printAssoicatedUEs() {
+		System.out.println("Location of AP: " + this.loc);
+		for(UserEquipment ue: this.associatedUEList) {
+			System.out.println( ue.getId() + ": " + ue.getLoc());
+		}
 	}
 }
