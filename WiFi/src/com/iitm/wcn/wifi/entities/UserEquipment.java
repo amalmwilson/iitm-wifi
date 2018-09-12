@@ -19,8 +19,7 @@ public class UserEquipment {
 	public AccessPoint searchAP(List<AccessPoint> apList) {
 		AccessPoint selectedAP = null;
 		double snr;
-		double maxSNR = -120; //dB
-		double maxPRcvd = -120; //dB
+		double maxSNR = -1000; //dB
 		double pathLoss;
 		double distance;
 		double powerRcvd;
@@ -33,10 +32,9 @@ public class UserEquipment {
 			powerRcvd = powerTx - pathLoss;	// in dBm
 			snr = powerRcvd - Params.NOISE; // in dBm
 			
-			System.out.println(distance+"***"+pathLoss+"--"+powerRcvd);
-			if( powerRcvd > maxPRcvd ) {
+			if( snr > maxSNR ) {
 				selectedAP = ap;
-				maxPRcvd = powerRcvd;
+				maxSNR = snr;
 			}
 		}
 		return selectedAP;

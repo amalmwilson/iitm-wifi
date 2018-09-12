@@ -26,9 +26,13 @@ public class Services {
 		
 		for( int i = 0; i < Params.NUM_APS; ++i) {
 			/* generate a random starting time for this AP */
-			txStartTime = (long)(randTime.nextDouble() * (Params.SIM_DURATION / Params.SIFS)) * Params.SIFS;
+			txStartTime = (long)(randTime.nextDouble() * (Params.AP_SCHEDULE_TIMEFRAME / Params.SIFS)) * Params.SIFS;
+			
 			/* generate a random duration for data transfer */
-			txDuration = Math.min((int)(Params.SIM_DURATION - txStartTime), (int)(randTime.nextDouble() * Params.MAX_TX_DURATON / Params.SIFS) * Params.SIFS);
+			do {
+				txDuration = Params.MIN_TX_SLOTS + (int)(randDur.nextDouble() * (Params.MAX_TX_SLOTS - Params.MIN_TX_SLOTS)) * Params.SIFS;	
+			} while( txDuration == 0 );
+			
 			loc = new Location( randX.nextInt(Params.AREA),	randY.nextInt(Params.AREA));
 			
 			ap = new AccessPoint(i, loc,txStartTime, txDuration, seed.nextLong());
@@ -62,7 +66,7 @@ public class Services {
 					continue;
 				}
 				
-				ue = new UserEquipment(ap.getId() * 100 + j, loc);
+				ue = new UserEquipment(ap.getId() * 10 + j, loc);
 				
 				
 				ueList.add(ue);
@@ -116,13 +120,21 @@ public class Services {
 	/* might be useful */
 	public void printAPSchedule(List<AccessPoint> apList) {
 		for(AccessPoint ap: apList ) {
-			System.out.println(ap.getId() + ":" + ap.getTxStartTime() + " for " + ap.getTxDuration());
+			System.out.println(ap.getId() + ":" + ap.getTxStartTime() + " to " + (ap.getTxStartTime() + ap.getTxDuration()));
 		}
 	}
 	
 	public void printUEAssociations(List<AccessPoint> apList) {
+		System.out.println("User assocations");
 		for(AccessPoint ap: apList ) {
 			ap.printAssoicatedUEs();
+		}
+	}
+
+	public void printAverageWaitingTimes(List<AccessPoint> apList) {
+		System.out.println("Average waiting time");
+		for(AccessPoint ap: apList ) {
+			System.out.println(ap.getId() + ", " + ap.getAverageWaitTime());
 		}
 	}
 }

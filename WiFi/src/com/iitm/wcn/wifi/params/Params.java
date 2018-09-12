@@ -19,11 +19,14 @@ public class Params {
 	public static int CH_BANDWIDTH = 20;		// Mega Hertz
 	public static int AP_RANGE = 50;			// radius in meters
 	
-	public static int SIM_DURATION = 24 * 60 * 60 * 1000;	// microseconds
+	public static long SIM_DURATION = 24 * 60 * 60 * 100000L;	// microseconds
 	public static int T_SLOT = 20;				// 20 micro second
 	public static int SIFS = 10;				// 10 micro second, short inter frame spacing
 	public static int DIFS = SIFS + 2 * T_SLOT;	// DCF inter frame spacing in micro seconds
-	public static int CW_MIN = 15;				// contention window size
-	public static int CW_MAX = 1023;			// contention window size
-	public static int MAX_TX_DURATON = 300;		// no of slots
+	public static int CW_MIN = 15 * SIFS;		// contention window size
+	public static int CW_MAX = 1023 * SIFS;		// contention window size
+	public static int MAX_TX_SLOTS = 10000;		// no of slots ~ 100000 microsecond
+	public static int MIN_TX_SLOTS = 100;		// no of slots ~ 1000 microseconds
+	
+	public static long AP_SCHEDULE_TIMEFRAME = 500000L; // microseconds
 }

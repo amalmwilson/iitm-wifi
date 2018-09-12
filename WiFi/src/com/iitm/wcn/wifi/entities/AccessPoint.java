@@ -8,8 +8,8 @@ import com.iitm.wcn.wifi.params.Params;
 
 public class AccessPoint {
 	private int id;
-	Random randTime = new Random(Params.TIME_SEED + 3);
-	Random randDur = new Random(Params.TIME_SEED + 4);
+	Random randTime;
+	Random randDur;
 
 	private List<UserEquipment> associatedUEList;
 	private List<AccessPoint> neighbours;
@@ -20,29 +20,38 @@ public class AccessPoint {
 	private int backoffTime;
 	private boolean backoffStatus;
 	private int txDuration;
-	private boolean difsWaited;
+	private double waitingTime;
+	private int scheduledCount;
+	private long scheduledTime;
+	private int cwSize;
 	
+	public int getCwSize() {
+		return cwSize;
+	}
+
 	public int getId() {
 		return id;
 	}
 
 	public int getBackoffTime() {
-		return backoffTime;
-	}
-
-	public void setBackoffTime() {
-		this.backoffTime *= 2;
+		this.backoffTime = Params.SIFS + (int)(Math.random() * (this.cwSize - Params.SIFS) / Params.SIFS) * Params.SIFS ;
+		return this.backoffTime;
 	}
 	
-	public void updateBackoffTime() {
-		this.backoffTime *= 2;
+	public void incCW() {
+		if( this.cwSize * 2 > Params.CW_MAX)
+			this.cwSize = Params.CW_MAX;
+		else
+			this.cwSize *= 2;
 	}
 	
-	public void updateBackoffTime(int time) {
-		this.backoffTime = Math.max(this.backoffTime - time, 0);
-		
+	public void decCW() {
+		if( (this.cwSize - Params.SIFS) < Params.CW_MIN )
+			this.cwSize = Params.CW_MIN;
+		else
+			this.cwSize -= Params.SIFS;
 	}
-
+	
 	public List<AccessPoint> getNeighbours(){
 		return this.neighbours;
 	}
@@ -79,13 +88,16 @@ public class AccessPoint {
 		this.id = id;
 		this.txPower = Params.TX_POWER;
 		this.txStartTime = txStartTime;
+		this.scheduledTime = txStartTime;
 		this.txDuration = txDuration;
-		this.backoffTime = Params.T_SLOT;
-		this.difsWaited= false;
+		this.backoffTime = 0;
 		this.ch = new Channel();
 		this.backoffStatus = false;
-		this.randTime = new Random(seed + 1);
-		this.randDur = new Random(seed + 2);
+		this.randTime = new Random();
+		this.randDur = new Random();
+		this.scheduledCount = 0;
+		this.waitingTime = 0;
+		this.cwSize = Params.CW_MIN;
 	}
 
 	/* add an accesspoint to the neighbours list */
@@ -156,20 +168,21 @@ public class AccessPoint {
 		return this.loc.distanceTo(ue.getLoc());
 	}
 
+	public void setAsScheduled( long time ) {
+		this.scheduledCount++;
+		this.waitingTime += time - this.scheduledTime;
+		this.backoffStatus = false;
+	}
+	
 	/* reset all parameters and find a new schedule */
 	public void setAsCompleted(long time) {
-		this.txStartTime = time + (long)(randTime.nextDouble() * (Params.SIM_DURATION - time) / Params.SIFS) * Params.SIFS;
-		this.txDuration = Math.min((int)(Params.SIM_DURATION - txStartTime), (int)(randTime.nextDouble() * Params.MAX_TX_DURATON / Params.SIFS) * Params.SIFS);
-		this.backoffTime = Params.T_SLOT;
-		this.difsWaited = false;
-	}
-
-	public boolean waitedDIFS() {
-		return difsWaited;
-	}
-
-	public void waitForDIFS() {
-		this.difsWaited = true;
+		this.txStartTime = time + Params.SIFS + (long)(randTime.nextDouble() * Params.AP_SCHEDULE_TIMEFRAME / Params.SIFS) * Params.SIFS;
+		do{
+			this.txDuration = Params.MIN_TX_SLOTS + (int)(randTime.nextDouble() * (Params.MAX_TX_SLOTS - Params.MIN_TX_SLOTS) ) * Params.SIFS;
+		} while(this.txDuration == 0);
+		
+		this.backoffStatus = false;
+		this.scheduledTime = this.txStartTime;
 	}
 
 	public boolean isInBackoffMode() {
@@ -181,9 +194,38 @@ public class AccessPoint {
 	}
 	
 	public void printAssoicatedUEs() {
-		System.out.println("Location of AP: " + this.loc);
+		System.out.println("Location of AP = " + this.loc);
+		System.out.println("No. or UEs = " + this.associatedUEList.size());
 		for(UserEquipment ue: this.associatedUEList) {
 			System.out.println( ue.getId() + ": " + ue.getLoc());
 		}
+	}
+	
+	public double getAverageWaitTime() {
+		if( this.scheduledCount > 0 )
+			return (this.waitingTime/this.scheduledCount);
+		else if( this.scheduledTime > Params.SIM_DURATION )
+			return 0;
+		else
+			return Params.SIM_DURATION - this.scheduledTime;
+	}
+
+	public void resetIdleTimer() {
+		this.ch.resetIdleTimer();
+		for( AccessPoint ap: this.neighbours ) {
+			ap.getChannel().resetIdleTimer();
+		}
+		
+	}
+
+	public void updateIdleTimer(int time) {
+		this.ch.updateIdleTimer(time);
+		for( AccessPoint ap: this.neighbours ) {
+			ap.getChannel().updateIdleTimer(time);
+		}
+	}
+
+	public int getIdleTimer() {
+		return this.ch.getIdleTimer();
 	}
 }
